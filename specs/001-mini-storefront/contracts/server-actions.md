@@ -291,3 +291,124 @@ export type PaymentDetail = {
   expYear: number;
 };
 ```
+
+---
+
+## Server Actions – Xác Thực Khách Hàng (US5)
+
+**Vị trí**: `lib/actions/auth.ts`
+
+### `registerUser(formData)`
+
+**Input** (từ HTML form):
+```typescript
+{
+  fullName: string;    // bắt buộc, không rỗng
+  email: string;       // bắt buộc, định dạng email hợp lệ
+  password: string;    // bắt buộc, tối thiểu 8 ký tự
+}
+```
+
+**Hành vi**:
+1. Validate phía server: `fullName` không rỗng, `email` hợp lệ, `password` ≥ 8 ký tự
+2. Gọi `supabase.auth.signUp({ email, password, options: { data: { full_name: fullName } } })`
+3. Nếu email đã tồn tại: Supabase trả identity conflict → map sang lỗi `EMAIL_TAKEN`
+4. Nếu thành công: session tự động set vào cookie bởi `@supabase/ssr`
+5. `redirect('/')` sau khi đăng ký thành công
+
+**Output (lỗi — không redirect)**:
+```typescript
+{ success: false, error: 'EMAIL_TAKEN' }
+{ success: false, error: 'VALIDATION_ERROR', fields: Record<string, string> }
+{ success: false, error: 'SERVER_ERROR' }
+```
+
+---
+
+### `loginUser(formData)`
+
+**Input**:
+```typescript
+{
+  email: string;
+  password: string;
+}
+```
+
+**Hành vi**:
+1. Validate phía server: email hợp lệ, password không rỗng
+2. Gọi `supabase.auth.signInWithPassword({ email, password })`
+3. Nếu lỗi (sai password, email không tồn tại, bị khoá): trả về lỗi chung `INVALID_CREDENTIALS` — **không phân biệt loại lỗi** (chống user enumeration)
+4. Nếu thành công: session cookie tự động set; `redirect('/')`
+
+**Output (lỗi)**:
+```typescript
+{ success: false, error: 'INVALID_CREDENTIALS' }   // dùng chung cho mọi lỗi đăng nhập
+{ success: false, error: 'SERVER_ERROR' }
+```
+
+---
+
+### `logoutUser()`
+
+**Hành vi**:
+1. Gọi `supabase.auth.signOut()`
+2. `redirect('/')`
+
+**Output**: Không có — luôn redirect.
+
+---
+
+## Server Actions – Admin Auth (US6)
+
+**Vị trí**: `lib/actions/admin-auth.ts`
+
+### `adminLogin(formData)`
+
+**Input**:
+```typescript
+{
+  username: string;
+  password: string;
+}
+```
+
+**Hành vi**:
+1. Validate: username và password không rỗng
+2. So sánh `username` với `process.env.ADMIN_USERNAME`
+3. So sánh `password` với `process.env.ADMIN_PASSWORD_HASH` dùng `bcryptjs.compare()`
+4. Nếu đúng: tạo HMAC-signed session token → set `admin_session` httpOnly cookie (8h maxAge)
+5. Nếu sai: delay 200ms (rate-limit đơn giản) → trả `INVALID_CREDENTIALS`
+6. `redirect('/admin/products')` khi thành công
+
+**Output (lỗi)**:
+```typescript
+{ success: false, error: 'INVALID_CREDENTIALS' }
+```
+
+---
+
+### `adminLogout()`
+
+**Hành vi**: Xóa cookie `admin_session` → `redirect('/admin/login')`
+
+---
+
+## Server Actions – Admin Quản Lý Users (US7)
+
+**Vị trí**: `lib/actions/admin-users.ts`
+
+### `toggleUserBan(userId, ban)`
+
+**Input**:
+```typescript
+userId: string;     // uuid từ auth.users
+ban: boolean;       // true = khoá, false = mở khoá
+```
+
+**Hành vi**:
+1. Kiểm tra admin access (cookie `admin_session`)
+2. Gọi service role: `supabase.auth.admin.updateUser(userId, { ban_duration: ban ? '876600h' : 'none' })`
+3. `revalidatePath('/admin/users')`
+
+**Output**: `{ success: true }` | `{ success: false, error: 'USER_NOT_FOUND' | 'SERVER_ERROR' }`

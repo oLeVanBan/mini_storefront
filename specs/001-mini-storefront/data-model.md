@@ -9,7 +9,8 @@
 ## Tổng Quan Quan Hệ
 
 ```
-categories (1) ──────< products (N)
+auth.users  (1) ──────< orders (N)          [nullable FK, chỉ khi đặt hàng khi đã đăng nhập]
+categories  (1) ──────< products (N)
 products    (1) ──────< order_items (N)
 orders      (1) ──────< order_items (N)
 orders      (1) ──────< payment_details (0..1)
@@ -80,13 +81,15 @@ Mặt hàng bán trong cửa hàng.
 | `total_amount` | `numeric(15,0)` | NOT NULL, CHECK `>= 0` | Tổng tiền đơn hàng (VND) |
 | `payment_method` | `text` | NOT NULL, CHECK IN (`'COD'`, `'CARD'`) | Phương thức thanh toán |
 | `status` | `text` | NOT NULL, default `'pending'`, CHECK IN (`'pending'`, `'confirmed'`, `'cancelled'`) | Trạng thái đơn hàng |
+| `user_id` | `uuid` | FK → `auth.users(id)` ON DELETE SET NULL, NULLABLE | Tài khoản khách hàng (null nếu guest) |
 | `created_at` | `timestamptz` | NOT NULL, default `now()` | Thời điểm đặt hàng |
 
 **Index**:
 - `orders(reference_number)` UNIQUE — tra cứu đơn hàng từ trang xác nhận
+- `orders(user_id)` — lịch sử đơn hàng theo user
 - `orders(created_at DESC)` — danh sách đơn hàng admin
 
-**RLS**: Không có policy cho `anon` hoặc `authenticated`. Toàn bộ ghi/đọc qua service role.
+**RLS**: Không có policy cho `anon`. Policy cho `authenticated`: `SELECT WHERE user_id = auth.uid()` (cho phép user xem đơn hàng của mình). Ghi qua service role.
 
 ---
 
@@ -171,6 +174,27 @@ Cart không có trạng thái trong DB — chỉ tồn tại trong cookie phiên
 4. **Tồn kho trừ khi checkout**: Không trừ tồn kho khi thêm vào giỏ; chỉ trừ khi đơn hàng được tạo thành công (atomic transaction).
 5. **Payment detail chỉ cho CARD**: Bảng `payment_details` chỉ có row khi `orders.payment_method = 'CARD'`.
 6. **Reference number duy nhất**: Format `ORD-{YYYYMMDD}-{6-char-random}`, được tạo phía server trước khi insert.
+7. **user_id nullable trong orders**: Guest checkout không có `user_id`; khi user đã đăng nhập, `user_id` được set từ `supabase.auth.getUser().data.user.id`. Không bao giờ expose `user_id` ra client.
+8. **Không có custom `users` table**: Supabase Auth tự quản lý `auth.users`. `user_metadata.full_name` lưu tên đầy đủ. Không cần thêm bảng public.
+
+---
+
+## Bảng Supabase Auth (Được Quản Lý Tự Động)
+
+Supabase Auth tự động tạo và quản lý bảng `auth.users`. Các field quan trọng cho project:
+
+| Field | Kiểu | Mô tả |
+|-------|------|-------|
+| `id` | `uuid` | PK — dùng làm FK trong `orders.user_id` |
+| `email` | `text` | Email đăng nhập (unique) |
+| `encrypted_password` | `text` | Password đã bcrypt hash (quản lý bởi Supabase) |
+| `user_metadata` | `jsonb` | `{ full_name: string }` — set khi đăng ký |
+| `created_at` | `timestamptz` | Ngày tạo tài khoản |
+| `last_sign_in_at` | `timestamptz` | Lần đăng nhập cuối |
+| `banned_until` | `timestamptz` | null = không bị khoá; future date = bị khoá |
+| `confirmed_at` | `timestamptz` | null = chưa xác nhận email |
+
+> **Ghi chú**: Admin tương tác với `auth.users` qua `supabase.auth.admin.*` API (service role). Không trực tiếp query `auth.users` bằng SQL từ server actions.
 
 ---
 
@@ -223,9 +247,11 @@ CREATE TABLE orders (
   payment_method   text NOT NULL CHECK (payment_method IN ('COD', 'CARD')),
   status           text NOT NULL DEFAULT 'pending'
                    CHECK (status IN ('pending', 'confirmed', 'cancelled')),
+  user_id          uuid REFERENCES auth.users(id) ON DELETE SET NULL,  -- nullable: guest = null
   created_at       timestamptz NOT NULL DEFAULT now()
 );
 CREATE INDEX idx_orders_created_at ON orders(created_at DESC);
+CREATE INDEX idx_orders_user_id ON orders(user_id);
 
 -- 4. Order Items
 CREATE TABLE order_items (
@@ -258,5 +284,13 @@ ALTER TABLE payment_details ENABLE ROW LEVEL SECURITY;
 
 CREATE POLICY "categories_public_read" ON categories FOR SELECT TO anon USING (true);
 CREATE POLICY "products_public_read" ON products FOR SELECT TO anon USING (is_published = true);
+-- orders: authenticated user can read their own orders
+CREATE POLICY "orders_user_read" ON orders FOR SELECT TO authenticated USING (user_id = auth.uid());
 -- orders, order_items, payment_details: no anon policies → blocked by default
+-- All writes go through service role
+
+-- Migration 002: Add user_id to orders (run after initial migration if upgrading)
+-- ALTER TABLE orders ADD COLUMN user_id uuid REFERENCES auth.users(id) ON DELETE SET NULL;
+-- CREATE INDEX idx_orders_user_id ON orders(user_id);
+-- CREATE POLICY "orders_user_read" ON orders FOR SELECT TO authenticated USING (user_id = auth.uid());
 ```

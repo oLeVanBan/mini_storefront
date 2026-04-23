@@ -201,12 +201,122 @@ _Nếu chọn Visa/Mastercard_ (hiện động):
 
 ## Navbar Component
 
-**Loại**: Server Component (đọc cart cookie để đếm số mục)
+**Loại**: Server Component (đọc cart cookie + Supabase Auth session)
 
 **Hiển thị**:
 - Logo / tên cửa hàng → link `/`
 - Danh mục chính → dropdown hoặc links
 - Icon giỏ hàng + badge số lượng mục → link `/cart`
+- **Khi chưa đăng nhập**: Link "Đăng nhập" → `/login`
+- **Khi đã đăng nhập**: Tên user + dropdown gồm "Đơn hàng của tôi" → `/profile/orders`, "Đăng xuất" → gọi `logoutUser()`
+
+---
+
+## Trang Xác Thực Khách Hàng (US5)
+
+### `/register` – Đăng Ký Tài Khoản
+
+**Loại**: Client Component (form)  
+**Guard**: Nếu đã đăng nhập → redirect `/`
+
+**Form fields**:
+- Họ và tên (text, bắt buộc)
+- Email (email, bắt buộc)
+- Mật khẩu (password, bắt buộc, ≥ 8 ký tự)
+
+**Validation phía client**: Email format, password ≥ 8 ký tự  
+**Submit** → `registerUser` Server Action  
+**Lỗi**: Hiển thị thông báo lỗi (EMAIL_TAKEN: "Email đã được sử dụng"; VALIDATION_ERROR: field-level; SERVER_ERROR: chung)  
+**Thành công**: Redirect → `/`
+
+**Link**: "Đã có tài khoản? Đăng nhập" → `/login`
+
+---
+
+### `/login` – Đăng Nhập Khách Hàng
+
+**Loại**: Client Component (form)  
+**Guard**: Nếu đã đăng nhập → redirect `/`
+
+**Form fields**:
+- Email (email, bắt buộc)
+- Mật khẩu (password, bắt buộc)
+
+**Submit** → `loginUser` Server Action  
+**Lỗi**: Hiển thị thông báo duy nhất "Email hoặc mật khẩu không đúng" cho mọi loại lỗi đăng nhập  
+**Thành công**: Redirect → `/` (hoặc `?redirect=` param nếu có)
+
+**Link**: "Chưa có tài khoản? Đăng ký" → `/register`
+
+---
+
+### `/profile/orders` – Lịch Sử Đơn Hàng
+
+**Loại**: Server Component  
+**Guard**: Nếu chưa đăng nhập → redirect `/login?redirect=/profile/orders`  
+**Dữ liệu**: Fetch `orders WHERE user_id = currentUser.id ORDER BY created_at DESC`
+
+**Hiển thị** (bảng):
+| Mã đơn hàng | Ngày đặt | Tổng tiền | Phương thức | Trạng thái |
+|-------------|----------|-----------|-------------|------------|
+
+Mỗi row click → trang xác nhận `/orders/[reference]`
+
+---
+
+## Trang Admin Auth (US6)
+
+### `/admin/login` – Đăng Nhập Admin (Updated)
+
+**Loại**: Client Component  
+**Guard**: Nếu đã có `admin_session` hợp lệ → redirect `/admin/products`
+
+**Form fields**:
+- Tên đăng nhập (text, bắt buộc)
+- Mật khẩu (password, bắt buộc)
+
+**Submit** → `adminLogin` Server Action  
+**Lỗi**: "Thông tin đăng nhập không đúng" (thông báo duy nhất)  
+**Thành công**: Redirect → `/admin/products`
+
+> **Thay đổi so với phiên bản cũ**: Không còn cơ chế `?secret=` trong URL. Form login là cách duy nhất để đăng nhập admin.
+
+---
+
+## Trang Admin Quản Lý Users (US7)
+
+### `/admin/users` – Danh Sách Users
+
+**Loại**: Server Component  
+**Guard**: Admin session bắt buộc  
+**Dữ liệu**: `supabase.auth.admin.listUsers()` kèm join count đơn hàng
+
+**Hiển thị** (bảng có tìm kiếm):
+- Ô tìm kiếm (search by email hoặc tên — client-side filter)
+
+| Email | Tên | Ngày đăng ký | Số đơn hàng | Trạng thái | Thao tác |
+|-------|-----|-------------|-------------|------------|----------|
+
+- **Trạng thái**: Badge "Hoạt động" (xanh) / "Bị khoá" (đỏ)
+- **Thao tác**: Nút "Khoá" / "Mở khoá" → gọi `toggleUserBan` Server Action | Nút "Chi tiết" → `/admin/users/[id]`
+
+---
+
+### `/admin/users/[id]` – Chi Tiết User
+
+**Loại**: Server Component  
+**Guard**: Admin session bắt buộc  
+**Dữ liệu**: `supabase.auth.admin.getUserById(id)` + fetch `orders WHERE user_id = id`
+
+**Hiển thị**:
+
+_Thông tin tài khoản_:
+- Email, tên đầy đủ, ngày đăng ký, lần đăng nhập cuối, trạng thái (hoạt động/bị khoá)
+- Nút "Khoá tài khoản" / "Mở khoá tài khoản" → `toggleUserBan` Server Action
+
+_Lịch sử đơn hàng_:
+- Bảng đơn hàng: mã tham chiếu, ngày đặt, tổng tiền, phương thức, trạng thái
+- Click row → `/orders/[reference]`
 
 ---
 
@@ -215,3 +325,5 @@ _Nếu chọn Visa/Mastercard_ (hiện động):
 **Hiển thị**:
 - Link "Sản phẩm" → `/admin/products`
 - Link "Danh mục" → `/admin/categories`
+- Link "Người dùng" → `/admin/users`
+- Nút "Đăng xuất" → gọi `adminLogout()` Server Action

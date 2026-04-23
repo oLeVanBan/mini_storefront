@@ -27,11 +27,20 @@
 - Ưu tiên Next.js App Router
 - Server Actions hoặc API Routes đơn giản
 
+7. Test-Driven Development (TDD)
+- **Bắt buộc** viết test trước khi implement cho Server Actions và utility functions
+- **Bắt buộc** viết test trước khi implement cho các Client Components có logic (CartItemRow, form components)
+- Quy trình: Red (test fail) → Green (implement tối thiểu) → Refactor
+- Test framework: Jest + React Testing Library (unit), Playwright (E2E)
+- Coverage tối thiểu: 80% cho `lib/**` và `components/**`
+- Mỗi Server Action phải có ít nhất: happy path, validation error, edge cases
+
 ## Tech Constraints
 - Next.js (Fullstack)
 - TypeScript
 - Supabase (DB + optional auth)
 - Deploy: Vercel
+- MCP: Setup để sử dụng MCP Server Context7 trong quá trình phát triển.
 
 ## Non-Goals
 - Không cần payment gateway thật

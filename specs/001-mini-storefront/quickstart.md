@@ -88,12 +88,29 @@ SUPABASE_SERVICE_ROLE_KEY=eyJ...
 # Cart cookie secret (tự sinh: openssl rand -base64 32)
 CART_COOKIE_SECRET=your-random-secret-here
 
-# Admin access (path bí mật thay cho auth thật)
-# Truy cập admin qua: /admin?secret=<giá trị này>
-ADMIN_SECRET=your-admin-secret-here
+# Admin Form Login (US6) — thay thế ADMIN_SECRET cũ
+ADMIN_USERNAME=admin
+# Tạo hash: node -e "const b=require('bcryptjs');console.log(b.hashSync('your_password',12))"
+ADMIN_PASSWORD_HASH=$2b$12$replace_with_bcrypt_hash
+# Tự sinh: node -e "require('crypto').randomBytes(32).toString('hex')|0" hoặc openssl rand -hex 32
+ADMIN_SESSION_SECRET=your-random-hex-secret-here
+
+# Legacy — có thể xóa sau khi US6 hoàn thành
+# ADMIN_SECRET=your-admin-secret-here
 ```
 
-> **Lưu ý bảo mật**: Không commit `.env.local` vào git. `SUPABASE_SERVICE_ROLE_KEY` không bao giờ được expose ra client.
+> **Lưu ý bảo mật**: Không commit `.env.local` vào git. `SUPABASE_SERVICE_ROLE_KEY` và `ADMIN_PASSWORD_HASH` không bao giờ được expose ra client.
+
+### Tạo bcrypt hash cho admin password
+
+```bash
+# Cài bcryptjs nếu chưa có
+pnpm add bcryptjs
+
+# Tạo hash (thay 'your_password' bằng mật khẩu thực)
+node -e "const b=require('bcryptjs'); console.log(b.hashSync('your_password', 12))"
+# Copy output vào ADMIN_PASSWORD_HASH trong .env.local
+```
 
 ---
 
