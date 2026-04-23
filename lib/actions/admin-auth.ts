@@ -63,7 +63,7 @@ export async function adminLogin(formData: FormData): Promise<AdminLoginResult> 
     maxAge: 60 * 60 * 8, // 8 hours
   })
 
-  redirect('/admin')
+  redirect('/admin/products')
 }
 
 export async function adminLogout(): Promise<void> {

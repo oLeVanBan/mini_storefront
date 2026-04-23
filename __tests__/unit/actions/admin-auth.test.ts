@@ -74,7 +74,7 @@ describe('adminLogin', () => {
     fd.set('password', 'admin123')
 
     await expect(adminLogin(fd)).rejects.toThrow('NEXT_REDIRECT')
-    expect(mockRedirect).toHaveBeenCalledWith('/admin')
+    expect(mockRedirect).toHaveBeenCalledWith('/admin/products')
     expect(mockCookiesSet).toHaveBeenCalledWith(
       'admin_session',
       expect.any(String),
