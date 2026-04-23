@@ -84,3 +84,19 @@ export interface CartActionResult {
   success: boolean
   error?: 'OUT_OF_STOCK' | 'PRODUCT_NOT_FOUND' | 'EXCEEDS_STOCK' | 'ITEM_NOT_IN_CART'
 }
+
+// ---- Auth ----
+
+export interface User {
+  id: string
+  email: string
+  fullName: string
+  createdAt: string
+  bannedUntil: string | null
+  lastSignInAt: string | null
+}
+
+export interface AdminSession {
+  username: string
+  expiresAt: number  // Unix timestamp ms
+}

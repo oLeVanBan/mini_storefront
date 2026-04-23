@@ -1,71 +1,82 @@
 /**
- * Admin login page — sets the admin_secret cookie via a server action,
- * then redirects to /admin/products.
- *
- * Access via: /admin/login
- * This page is outside the (admin) layout group so the guard doesn't block it.
+ * Admin login page — authenticates via bcrypt + Server Action,
+ * stores HMAC-signed session cookie, then redirects to /admin.
  */
 'use client'
 
-import { useState } from 'react'
-import { useRouter } from 'next/navigation'
+import { useState, useTransition } from 'react'
+import { adminLogin } from '@/lib/actions/admin-auth'
 
 export default function AdminLoginPage() {
-  const [secret, setSecret] = useState('')
-  const [error, setError] = useState('')
-  const [loading, setLoading] = useState(false)
-  const router = useRouter()
+  const [isPending, startTransition] = useTransition()
+  const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({})
+  const [serverError, setServerError] = useState<string | null>(null)
 
-  async function handleSubmit(e: React.FormEvent) {
+  async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault()
-    setError('')
-    setLoading(true)
-    try {
-      const res = await fetch('/api/admin/login', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ secret }),
-      })
-      if (res.ok) {
-        router.push('/admin/products')
-      } else {
-        setError('Mật khẩu không đúng.')
+    setFieldErrors({})
+    setServerError(null)
+
+    const fd = new FormData(e.currentTarget)
+
+    startTransition(async () => {
+      try {
+        const result = await adminLogin(fd)
+        if (!result.success) {
+          if (result.error === 'VALIDATION_ERROR' && 'fields' in result) {
+            setFieldErrors(result.fields as Record<string, string>)
+          } else {
+            setServerError('Tên đăng nhập hoặc mật khẩu không đúng.')
+          }
+        }
+      } catch (err: unknown) {
+        // redirect() throws — not a real error, Next.js handles it
+        if (err instanceof Error && err.message !== 'NEXT_REDIRECT') {
+          setServerError('Có lỗi xảy ra. Vui lòng thử lại.')
+        }
       }
-    } catch {
-      setError('Lỗi kết nối.')
-    } finally {
-      setLoading(false)
-    }
+    })
   }
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-100">
       <div className="bg-white rounded-xl shadow p-8 w-full max-w-sm space-y-5">
-        <h1 className="text-xl font-bold text-gray-800 text-center">Admin Login</h1>
+        <h1 className="text-xl font-bold text-gray-800 text-center">Admin Đăng nhập</h1>
+
         <form onSubmit={handleSubmit} className="space-y-4">
+          {serverError && (
+            <div role="alert" className="bg-red-50 border border-red-200 text-red-700 rounded-lg px-3 py-2 text-sm">
+              {serverError}
+            </div>
+          )}
+
           <div>
-            <label htmlFor="secret" className="block text-sm font-medium text-gray-700 mb-1">
-              Admin Secret
+            <label htmlFor="username" className="block text-sm font-medium text-gray-700 mb-1">
+              Tên đăng nhập
             </label>
             <input
-              id="secret"
-              type="password"
-              value={secret}
-              onChange={(e) => setSecret(e.target.value)}
-              required
-              className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm
-                focus:outline-none focus:ring-2 focus:ring-indigo-500"
-              placeholder="Nhập admin secret"
+              id="username" name="username" type="text" required autoComplete="username"
+              className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
             />
+            {fieldErrors.username && <p className="text-red-500 text-xs mt-1">{fieldErrors.username}</p>}
           </div>
-          {error && <p className="text-sm text-red-600">{error}</p>}
+
+          <div>
+            <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-1">
+              Mật khẩu
+            </label>
+            <input
+              id="password" name="password" type="password" required autoComplete="current-password"
+              className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+            />
+            {fieldErrors.password && <p className="text-red-500 text-xs mt-1">{fieldErrors.password}</p>}
+          </div>
+
           <button
-            type="submit"
-            disabled={loading}
-            className="w-full py-2 px-4 bg-indigo-600 text-white font-semibold rounded-lg
-              hover:bg-indigo-700 disabled:opacity-50 transition-colors"
+            type="submit" disabled={isPending}
+            className="w-full bg-indigo-600 hover:bg-indigo-700 disabled:opacity-60 text-white font-semibold py-2.5 rounded-lg transition-colors"
           >
-            {loading ? 'Đang đăng nhập…' : 'Đăng nhập'}
+            {isPending ? 'Đang đăng nhập...' : 'Đăng nhập'}
           </button>
         </form>
       </div>

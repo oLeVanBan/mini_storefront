@@ -3,13 +3,15 @@
 import { revalidatePath } from 'next/cache'
 import { cookies } from 'next/headers'
 import { createAdminClient } from '@/lib/supabase/server'
+import { verifyAdminSession } from '@/lib/utils/admin-session'
 
 // ── Auth helper ───────────────────────────────────────────────────────────────
 
 async function checkAdminAccess(): Promise<boolean> {
   const cookieStore = await cookies()
-  const secret = cookieStore.get('admin_secret')?.value
-  return secret === process.env.ADMIN_SECRET
+  const token = cookieStore.get('admin_session')?.value ?? ''
+  const result = await verifyAdminSession(token)
+  return result.valid
 }
 
 const SLUG_RE = /^[a-z0-9]+(?:-[a-z0-9]+)*$/
@@ -41,7 +43,6 @@ export async function updateProduct(
     .from('products')
     .update(updatePayload)
     .eq('id', productId)
-    .single()
 
   if (error) {
     return { success: false, error: 'SERVER_ERROR' }
@@ -73,6 +74,7 @@ export async function createCategory(
   const { data: row, error } = await supabase
     .from('categories')
     .insert({ name: data.name.trim(), slug: data.slug.trim() })
+    .select()
     .single()
 
   if (error) {
@@ -114,7 +116,6 @@ export async function updateCategory(
     .from('categories')
     .update(updatePayload)
     .eq('id', categoryId)
-    .single()
 
   if (error) {
     if (error.code === '23505') {

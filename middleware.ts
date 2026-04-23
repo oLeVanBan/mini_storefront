@@ -1,50 +1,54 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { createServerClient } from '@supabase/ssr'
+import { verifyAdminSession } from '@/lib/utils/admin-session'
 
 /**
- * Middleware: handles ?secret=<ADMIN_SECRET> on any /admin/* route.
- * If the query param is present and valid, sets the admin_secret cookie
- * and redirects to the same URL without the query param.
- * If the cookie is absent/invalid on an /admin/* route, redirects to /admin/login.
+ * Middleware:
+ * 1. Refreshes Supabase auth session on every request (shop routes)
+ * 2. Protects /admin/* routes with HMAC-signed session cookie
  */
-export function middleware(request: NextRequest) {
-  const { pathname, searchParams, origin } = request.nextUrl
+export async function middleware(request: NextRequest) {
+  const { pathname, origin } = request.nextUrl
+  let response = NextResponse.next({ request })
 
-  // Only run on /admin/* routes (not /admin/login or /api/admin/*)
-  if (!pathname.startsWith('/admin') || pathname.startsWith('/admin/login')) {
-    return NextResponse.next()
-  }
-
-  const adminSecret = process.env.ADMIN_SECRET
-  const secretParam = searchParams.get('secret')
-
-  // If ?secret= is provided and valid → set cookie and redirect (strip param)
-  if (secretParam) {
-    if (secretParam === adminSecret) {
-      const url = request.nextUrl.clone()
-      url.searchParams.delete('secret')
-      const response = NextResponse.redirect(url)
-      response.cookies.set('admin_secret', secretParam, {
-        httpOnly: true,
-        secure: process.env.NODE_ENV === 'production',
-        sameSite: 'lax',
-        path: '/',
-        maxAge: 60 * 60 * 8, // 8 hours
-      })
-      return response
+  // --- Supabase session refresh (for customer auth) ---
+  const supabase = createServerClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    {
+      cookies: {
+        getAll() {
+          return request.cookies.getAll()
+        },
+        setAll(cookiesToSet) {
+          cookiesToSet.forEach(({ name, value }) => request.cookies.set(name, value))
+          response = NextResponse.next({ request })
+          cookiesToSet.forEach(({ name, value, options }) =>
+            response.cookies.set(name, value, options)
+          )
+        },
+      },
     }
-    // Wrong secret → redirect to login
-    return NextResponse.redirect(new URL('/admin/login', origin))
+  )
+  // Refresh session — must be called before checking auth status
+  await supabase.auth.getUser()
+
+  // --- Admin route protection ---
+  if (pathname.startsWith('/admin') && !pathname.startsWith('/admin/login')) {
+    const token = request.cookies.get('admin_session')?.value ?? ''
+    const result = await verifyAdminSession(token)
+    if (!result.valid) {
+      return NextResponse.redirect(new URL('/admin/login', origin))
+    }
   }
 
-  // No param → check cookie
-  const cookieSecret = request.cookies.get('admin_secret')?.value
-  if (!cookieSecret || cookieSecret !== adminSecret) {
-    return NextResponse.redirect(new URL('/admin/login', origin))
-  }
-
-  return NextResponse.next()
+  return response
 }
 
 export const config = {
-  matcher: ['/admin/:path*'],
+  matcher: [
+    // Protect admin routes + refresh Supabase session on all app routes
+    '/admin/:path*',
+    '/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)',
+  ],
 }

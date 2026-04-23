@@ -126,30 +126,44 @@ mini-storefront/
 │   │   ├── products/[id]/page.tsx
 │   │   ├── cart/page.tsx
 │   │   ├── checkout/page.tsx
-│   │   └── orders/[reference]/page.tsx
+│   │   ├── orders/[reference]/page.tsx
+│   │   ├── login/page.tsx          # Đăng nhập khách hàng
+│   │   ├── register/page.tsx       # Đăng ký khách hàng
+│   │   └── profile/orders/page.tsx # Lịch sử đơn hàng
 │   ├── (admin)/
 │   │   ├── layout.tsx
-│   │   └── admin/products/
-│   │       ├── page.tsx
-│   │       └── [id]/page.tsx
+│   │   └── admin/
+│   │       ├── products/
+│   │       │   ├── page.tsx
+│   │       │   └── [id]/page.tsx
+│   │       ├── categories/
+│   │       └── users/
+│   │           ├── page.tsx        # Danh sách người dùng
+│   │           └── [id]/page.tsx   # Chi tiết + ban/unban
+│   ├── admin/login/page.tsx        # Admin đăng nhập (outside guard)
 │   └── layout.tsx
 ├── lib/
 │   ├── actions/
 │   │   ├── cart.ts
 │   │   ├── checkout.ts
-│   │   └── admin.ts
+│   │   ├── admin.ts
+│   │   ├── admin-auth.ts           # adminLogin, adminLogout (bcrypt)
+│   │   ├── admin-users.ts          # listUsers, toggleUserBan (Supabase Admin API)
+│   │   └── auth.ts                 # registerUser, loginUser, logoutUser (Supabase Auth)
 │   ├── supabase/
 │   │   ├── client.ts               # createBrowserClient()
-│   │   └── server.ts               # createServerClient() với service role
+│   │   └── server.ts               # createServerClient() + createAdminClient()
 │   ├── types.ts
 │   └── utils/
+│       ├── admin-session.ts        # HMAC sign/verify for admin cookie
 │       ├── cart-cookie.ts
 │       └── format.ts               # formatVND(), formatDate()
 ├── components/
 │   ├── ui/                         # Button, Input, Badge, v.v.
-│   ├── Navbar.tsx
+│   ├── Navbar.tsx                  # Shows login/logout based on auth state
 │   ├── ProductCard.tsx
 │   ├── CartItemRow.tsx
+│   ├── PaymentMethodSelector.tsx
 │   └── CheckoutForm.tsx
 └── next.config.ts
 ```
@@ -187,8 +201,11 @@ export function createAdminClient() {
 
 ```bash
 pnpm dev
-# → http://localhost:3000
-# → Admin: http://localhost:3000/admin?secret=<ADMIN_SECRET>
+# → http://localhost:3000            (Storefront)
+# → http://localhost:3000/register   (Đăng ký khách hàng)
+# → http://localhost:3000/login      (Đăng nhập khách hàng)
+# → http://localhost:3000/admin/login (Admin đăng nhập)
+#   Dùng ADMIN_USERNAME + ADMIN_PASSWORD (plain text, hash trong env)
 ```
 
 ---

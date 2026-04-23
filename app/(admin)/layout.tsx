@@ -1,4 +1,5 @@
 import Link from 'next/link'
+import { adminLogout } from '@/lib/actions/admin-auth'
 
 export default function AdminLayout({
   children,
@@ -14,20 +15,24 @@ export default function AdminLayout({
             Mini Store
           </Link>
           <nav className="flex items-center gap-4 text-sm font-medium">
-            <Link
-              href="/admin/products"
-              className="hover:text-indigo-200 transition-colors"
-            >
+            <Link href="/admin/products" className="hover:text-indigo-200 transition-colors">
               Sản phẩm
             </Link>
-            <Link
-              href="/admin/categories"
-              className="hover:text-indigo-200 transition-colors"
-            >
+            <Link href="/admin/categories" className="hover:text-indigo-200 transition-colors">
               Danh mục
             </Link>
+            <Link href="/admin/users" className="hover:text-indigo-200 transition-colors">
+              Người dùng
+            </Link>
           </nav>
-          <span className="text-xs text-indigo-300">Admin</span>
+          <form action={adminLogout}>
+            <button
+              type="submit"
+              className="text-xs text-indigo-300 hover:text-white transition-colors"
+            >
+              Đăng xuất
+            </button>
+          </form>
         </div>
       </header>
       <main className="flex-1 max-w-6xl mx-auto w-full px-4 py-8">

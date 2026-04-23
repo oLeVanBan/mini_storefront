@@ -7,8 +7,10 @@
 
 // ── Environment & Mocks ──────────────────────────────────────────────────────
 
-// Admin secret for tests
-process.env.ADMIN_SECRET = 'test-admin-secret'
+// Mock verifyAdminSession so tests don't need a real HMAC token
+jest.mock('@/lib/utils/admin-session', () => ({
+  verifyAdminSession: jest.fn(),
+}))
 
 const mockRevalidatePath = jest.fn()
 jest.mock('next/cache', () => ({
@@ -40,6 +42,9 @@ function makeChain(terminal: jest.Mock) {
   chain.select = jest.fn(() => chain)
   // For count queries
   chain.count = terminal
+  // Make chain itself awaitable — used when .single() is not in the query
+  chain.then = (resolve: (v: unknown) => void, reject?: (e: unknown) => void) =>
+    (terminal() as Promise<unknown>).then(resolve, reject)
   return chain
 }
 
@@ -64,31 +69,32 @@ jest.mock('@/lib/supabase/server', () => ({
   })),
 }))
 
-// ── Helper: simulate admin cookie ─────────────────────────────────────────────
+// ── Helper: simulate admin session ─────────────────────────────────────────────
+import { verifyAdminSession } from '@/lib/utils/admin-session'
+import { updateProduct } from '@/lib/actions/admin'
+import { createCategory } from '@/lib/actions/admin'
+import { updateCategory } from '@/lib/actions/admin'
+import { deleteCategory } from '@/lib/actions/admin'
+const mockVerifyAdminSession = verifyAdminSession as jest.Mock
+
 function asAdmin() {
   mockCookieStore.get.mockImplementation((key: string) => {
-    if (key === 'admin_secret') return { value: 'test-admin-secret' }
+    if (key === 'admin_session') return { value: 'mock-valid-token' }
     return undefined
   })
+  mockVerifyAdminSession.mockResolvedValue({ valid: true, session: { username: 'admin', expiresAt: Date.now() + 99999 } })
 }
 
 function asNonAdmin() {
   mockCookieStore.get.mockReturnValue(undefined)
+  mockVerifyAdminSession.mockResolvedValue({ valid: false })
 }
 
 // ── updateProduct ─────────────────────────────────────────────────────────────
 
 describe('updateProduct', () => {
-  let updateProduct: (
-    productId: string,
-    data: { price?: number; stockQuantity?: number; isPublished?: boolean }
-  ) => Promise<{ success: boolean; error?: string }>
-
   beforeEach(() => {
-    jest.resetModules()
     jest.clearAllMocks()
-    process.env.ADMIN_SECRET = 'test-admin-secret'
-    updateProduct = require('@/lib/actions/admin').updateProduct
   })
 
   it('updates product successfully when admin', async () => {
@@ -140,15 +146,8 @@ describe('updateProduct', () => {
 // ── createCategory ────────────────────────────────────────────────────────────
 
 describe('createCategory', () => {
-  let createCategory: (
-    data: { name: string; slug: string }
-  ) => Promise<{ success: boolean; id?: string; error?: string }>
-
   beforeEach(() => {
-    jest.resetModules()
     jest.clearAllMocks()
-    process.env.ADMIN_SECRET = 'test-admin-secret'
-    createCategory = require('@/lib/actions/admin').createCategory
   })
 
   it('creates category successfully', async () => {
@@ -235,16 +234,8 @@ describe('createCategory', () => {
 // ── updateCategory ────────────────────────────────────────────────────────────
 
 describe('updateCategory', () => {
-  let updateCategory: (
-    categoryId: string,
-    data: { name?: string; slug?: string }
-  ) => Promise<{ success: boolean; error?: string }>
-
   beforeEach(() => {
-    jest.resetModules()
     jest.clearAllMocks()
-    process.env.ADMIN_SECRET = 'test-admin-secret'
-    updateCategory = require('@/lib/actions/admin').updateCategory
   })
 
   it('updates category successfully', async () => {
@@ -285,16 +276,8 @@ describe('updateCategory', () => {
 // ── deleteCategory ────────────────────────────────────────────────────────────
 
 describe('deleteCategory', () => {
-  let deleteCategory: (
-    categoryId: string
-  ) => Promise<{ success: boolean; error?: string; count?: number }>
-
-  // Separate mocked supabase for deleteCategory since it needs select for count
   beforeEach(() => {
-    jest.resetModules()
     jest.clearAllMocks()
-    process.env.ADMIN_SECRET = 'test-admin-secret'
-    deleteCategory = require('@/lib/actions/admin').deleteCategory
   })
 
   it('deletes category when no products', async () => {
