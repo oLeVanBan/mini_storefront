@@ -31,7 +31,18 @@
 
 *GATE: Must pass before Phase 0 research. Re-check after Phase 1 design.*
 
-[Gates determined based on constitution file]
+Verify compliance with all Mini Storefront Constitution principles (v1.0.0):
+
+- [ ] **I. Code Quality** — DRY/SOLID/YAGNI followed; no commented-out code;
+  complexity justified in PR description; single responsibility per module.
+- [ ] **II. Testing Standards** — Tests written before implementation; unit
+  coverage ≥ 80 %; integration test exists for each user story.
+- [ ] **III. User Experience Consistency** — UI components conform to design
+  system; WCAG 2.1 AA satisfied; all acceptance scenarios validated.
+- [ ] **IV. Performance Requirements** — LCP ≤ 2.5 s, INP ≤ 200 ms, CLS < 0.1;
+  API p95 ≤ 200 ms; bundle budget defined and enforced in CI.
+
+Any violations MUST be documented in the Complexity Tracking table below.
 
 ## Project Structure
 

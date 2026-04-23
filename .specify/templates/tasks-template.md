@@ -152,10 +152,23 @@ Examples of foundational tasks (adjust based on your project):
 
 - [ ] TXXX [P] Documentation updates in docs/
 - [ ] TXXX Code cleanup and refactoring
-- [ ] TXXX Performance optimization across all stories
 - [ ] TXXX [P] Additional unit tests (if requested) in tests/unit/
 - [ ] TXXX Security hardening
 - [ ] TXXX Run quickstart.md validation
+
+### Constitution Quality Gates *(mandatory before merge)*
+
+> These tasks enforce the four Core Principles of the Mini Storefront Constitution.
+
+- [ ] TXXX **[Code Quality]** Run linter + formatter; zero errors remain
+- [ ] TXXX **[Code Quality]** Run type-checker in strict mode; zero errors remain
+- [ ] TXXX **[Testing Standards]** Confirm unit coverage ≥ 80 % for all new modules
+- [ ] TXXX **[Testing Standards]** Confirm all user-story integration tests are green
+- [ ] TXXX **[UX Consistency]** Run automated accessibility scan; zero critical violations
+- [ ] TXXX **[UX Consistency]** Verify all new UI components conform to design system
+- [ ] TXXX **[Performance]** Run Lighthouse / Core Web Vitals check; LCP ≤ 2.5 s,
+      INP ≤ 200 ms, CLS < 0.1
+- [ ] TXXX **[Performance]** Verify API p95 latency ≤ 200 ms; bundle size within budget
 
 ---
 

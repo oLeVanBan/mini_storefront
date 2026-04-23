@@ -114,6 +114,15 @@
 - **SC-003**: [User satisfaction metric, e.g., "90% of users successfully complete primary task on first attempt"]
 - **SC-004**: [Business metric, e.g., "Reduce support tickets related to [X] by 50%"]
 
+### Constitution-Mandated Criteria *(non-negotiable)*
+
+- **SC-PERF-01**: Core Web Vitals meet "Good" thresholds (LCP ≤ 2.5 s, INP ≤ 200 ms, CLS < 0.1).
+- **SC-PERF-02**: All API endpoints respond within 200 ms at p95 under nominal load.
+- **SC-TEST-01**: Unit test coverage remains ≥ 80 % across all feature modules.
+- **SC-TEST-02**: Every user story has at least one passing integration test before merge.
+- **SC-UX-01**: All interactive elements pass automated WCAG 2.1 AA accessibility scan.
+- **SC-UX-02**: All UI components comply with the project design system conventions.
+
 ## Assumptions
 
 <!--
