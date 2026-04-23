@@ -58,7 +58,7 @@ export default function AddToCartButton({
             onClick={decrement}
             disabled={quantity <= 1}
             aria-label="Giảm số lượng"
-            className="px-3 py-1.5 text-lg text-gray-700 hover:bg-gray-100 disabled:opacity-40 transition-colors"
+            className="px-3 py-1.5 text-lg text-gray-700 hover:bg-gray-100 disabled:opacity-40 transition-colors cursor-pointer disabled:cursor-not-allowed"
           >
             −
           </button>
@@ -70,7 +70,7 @@ export default function AddToCartButton({
             onClick={increment}
             disabled={quantity >= stockQuantity}
             aria-label="Tăng số lượng"
-            className="px-3 py-1.5 text-lg text-gray-700 hover:bg-gray-100 disabled:opacity-40 transition-colors"
+            className="px-3 py-1.5 text-lg text-gray-700 hover:bg-gray-100 disabled:opacity-40 transition-colors cursor-pointer disabled:cursor-not-allowed"
           >
             +
           </button>
@@ -84,7 +84,7 @@ export default function AddToCartButton({
         onClick={handleAdd}
         disabled={isPending}
         aria-label={`Thêm ${quantity} sản phẩm vào giỏ hàng`}
-        className="w-full py-2.5 px-4 bg-indigo-600 text-white font-semibold rounded-md hover:bg-indigo-700 disabled:opacity-60 transition-colors text-sm"
+        className="w-full py-2.5 px-4 bg-indigo-600 text-white font-semibold rounded-md hover:bg-indigo-700 disabled:opacity-60 transition-colors text-sm cursor-pointer disabled:cursor-not-allowed"
       >
         {isPending ? 'Đang thêm...' : success ? '✓ Đã thêm vào giỏ!' : 'Thêm vào giỏ hàng'}
       </button>

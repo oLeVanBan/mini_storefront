@@ -150,6 +150,7 @@ data: {
   price?: number;          // >= 0
   stockQuantity?: number;  // >= 0
   isPublished?: boolean;
+  categoryId?: string;     // UUID của category hợp lệ
 };
 ```
 

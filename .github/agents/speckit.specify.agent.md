@@ -58,6 +58,8 @@ The text the user typed after `/speckit.specify` in the triggering message **is*
 
 Given that feature description, do this:
 
+0. **Load project constitution**: Read `.specify/memory/constitution.md` to understand project principles, tech constraints, TDD requirements, and tool usage policy. Apply these constraints throughout the entire specification.
+
 1. **Generate a concise short name** (2-4 words) for the feature:
    - Analyze the feature description and extract the most meaningful keywords
    - Create a 2-4 word short name that captures the essence of the feature

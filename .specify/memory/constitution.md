@@ -35,6 +35,19 @@
 - Coverage tối thiểu: 80% cho `lib/**` và `components/**`
 - Mỗi Server Action phải có ít nhất: happy path, validation error, edge cases
 
+8. Tool Usage Policy
+
+You MUST use context7 MCP when:
+- implementing features involving external frameworks (Next.js, Supabase, etc.)
+- API usage is unclear or requires validation
+
+Before writing any code:
+1. Call context7 MCP to retrieve relevant documentation
+2. Base implementation on retrieved results
+
+Do NOT rely on internal knowledge when MCP is available.
+
+
 ## Tech Constraints
 - Next.js (Fullstack)
 - TypeScript

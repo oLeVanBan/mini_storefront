@@ -7,6 +7,7 @@ ALTER TABLE orders
 CREATE INDEX IF NOT EXISTS idx_orders_user_id ON orders(user_id);
 
 -- Allow authenticated users to read their own orders
-CREATE POLICY IF NOT EXISTS "orders_user_read"
+DROP POLICY IF EXISTS "orders_user_read" ON orders;
+CREATE POLICY "orders_user_read"
   ON orders FOR SELECT TO authenticated
   USING (user_id = auth.uid());

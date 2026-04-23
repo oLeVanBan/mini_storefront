@@ -141,6 +141,33 @@ describe('updateProduct', () => {
     expect(mockRevalidatePath).toHaveBeenCalledWith('/products/prod-1')
     expect(mockRevalidatePath).toHaveBeenCalledWith('/admin/products')
   })
+
+  it('updates categoryId successfully', async () => {
+    asAdmin()
+    ;(updateChain.single as jest.Mock).mockResolvedValue({ data: {}, error: null })
+    const result = await updateProduct('prod-1', { categoryId: 'cat-new' })
+    expect(result.success).toBe(true)
+    expect(mockUpdate).toHaveBeenCalledWith(
+      expect.objectContaining({ category_id: 'cat-new' })
+    )
+  })
+
+  it('updates name successfully', async () => {
+    asAdmin()
+    ;(updateChain.single as jest.Mock).mockResolvedValue({ data: {}, error: null })
+    const result = await updateProduct('prod-1', { name: 'Tên Mới' })
+    expect(result.success).toBe(true)
+    expect(mockUpdate).toHaveBeenCalledWith(
+      expect.objectContaining({ name: 'Tên Mới' })
+    )
+  })
+
+  it('returns VALIDATION_ERROR when name is empty string', async () => {
+    asAdmin()
+    const result = await updateProduct('prod-1', { name: '   ' })
+    expect(result.success).toBe(false)
+    expect(result.error).toBe('VALIDATION_ERROR')
+  })
 })
 
 // ── createCategory ────────────────────────────────────────────────────────────

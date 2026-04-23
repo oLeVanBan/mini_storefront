@@ -196,8 +196,31 @@
 
 **Mục đích**: Kết nối auth với checkout, cập nhật documentation, đảm bảo backward compatibility
 
-- [ ] T081 [US5] Cập nhật `lib/actions/checkout.ts` — `submitOrder`: sau khi validate cart, gọi `createClient().auth.getUser()` lấy user session; nếu user đã login set `user_id = user.id` trong `orders` INSERT, nếu guest để `user_id = NULL`; không thay đổi bất kỳ behavior nào khác của checkout
-- [ ] T082 [P] Cập nhật `specs/001-mini-storefront/quickstart.md`: thêm section "Setup Admin Password" với lệnh tạo bcrypt hash, cập nhật bảng env vars với 3 biến mới, thêm hướng dẫn chạy migration 002
+- [x] T081 [US5] Cập nhật `lib/actions/checkout.ts` — `submitOrder`: sau khi validate cart, gọi `createClient().auth.getUser()` lấy user session; nếu user đã login set `user_id = user.id` trong `orders` INSERT, nếu guest để `user_id = NULL`; không thay đổi bất kỳ behavior nào khác của checkout
+- [x] T082 [P] Cập nhật `specs/001-mini-storefront/quickstart.md`: thêm section "Setup Admin Password" với lệnh tạo bcrypt hash, cập nhật bảng env vars với 3 biến mới, thêm hướng dẫn chạy migration 002
+
+---
+
+## Phase 13: Product Image Upload
+
+**Mục đích**: Cho phép admin upload ảnh sản phẩm qua Supabase Storage; hiển thị ảnh trên storefront
+
+- [x] T083 [P] Tạo Supabase Storage migration `supabase/migrations/003_storage.sql`: tạo bucket `product-images` (public), thêm RLS policies cho service_role upload và public read
+- [x] T084 [P] Cập nhật `next.config.ts`: thêm `remotePatterns` cho `127.0.0.1` (local dev) và `localhost` để `<Image>` render được ảnh từ Supabase local
+- [x] T085 Tạo Server Action `uploadProductImage(productId, file)` trong `lib/actions/admin.ts`: validate MIME (jpeg/png/webp) và size (≤5MB), upload lên `product-images/{productId}` qua service role, cập nhật `products.image_url`, revalidate paths
+- [x] T086 Tạo Client Component `components/ImageUploadButton.tsx`: `<input type="file">` ẩn + preview ảnh hiện tại + button trigger upload + loading state + error message
+- [x] T087 Tích hợp `ImageUploadButton` vào `app/(admin)/admin/products/[id]/page.tsx`: hiển thị ảnh hiện tại và cho phép thay đổi
+
+---
+
+## Phase 14: Admin DB Authentication
+
+**Mục đích**: Chuyển admin auth từ env vars sang bảng `admins` trong DB — dễ quản lý nhiều admin, không phụ thuộc env ADMIN_PASSWORD_HASH
+
+- [x] T088 Tạo migration `supabase/migrations/004_admins.sql`: bảng `admins` (`id uuid PK`, `username text UNIQUE NOT NULL`, `password_hash text NOT NULL`, `created_at timestamptz`); seed 1 admin mặc định (`admin` / `admin123`); không bật RLS (service_role only)
+- [x] T089 Cập nhật `lib/actions/admin-auth.ts`: thay lookup từ env vars sang `createAdminClient().from('admins').select().eq('username', ...)` — giữ nguyên bcrypt compare, HMAC session, cookie logic
+- [x] T090 [P] Cập nhật tests `__tests__/unit/actions/admin-auth.test.ts`: mock Supabase admin client thay vì env vars; giữ nguyên các test case happy/error paths
+- [x] T091 [P] Xóa `ADMIN_USERNAME` và `ADMIN_PASSWORD_HASH` khỏi `.env.local` và `.env.local.example`; giữ `ADMIN_SESSION_SECRET`
 
 ---
 

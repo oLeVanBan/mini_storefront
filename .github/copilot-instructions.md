@@ -35,24 +35,23 @@
 - Coverage tối thiểu: 80% cho `lib/**` và `components/**`
 - Mỗi Server Action phải có ít nhất: happy path, validation error, edge cases
 
+8. Tool Usage Policy
+
+You MUST use context7 MCP when:
+- implementing features involving external frameworks (Next.js, Supabase, etc.)
+- API usage is unclear or requires validation
+
+Before writing any code:
+1. Call context7 MCP to retrieve relevant documentation
+2. Base implementation on retrieved results
+
+Do NOT rely on internal knowledge when MCP is available.
 ## Tech Constraints
 - Next.js (Fullstack)
 - TypeScript
 - Supabase (DB + optional auth)
-- Deploy: Vercel
-- MCP: Setup để sử dụng MCP Server Context7 trong quá trình phát triển.
+- Deploy: Vercel hoặc Cloudflare Workers
 
 ## Non-Goals
 - Không cần payment gateway thật
 - Không cần auth phức tạp (có thể mock admin)
-
-<!-- SPECKIT START -->
-## Active Implementation Plan
-- **Feature**: 001-mini-storefront
-- **Plan**: specs/001-mini-storefront/plan.md
-- **Spec**: specs/001-mini-storefront/spec.md
-- **Research**: specs/001-mini-storefront/research.md
-- **Data Model**: specs/001-mini-storefront/data-model.md
-- **Contracts**: specs/001-mini-storefront/contracts/
-- **Quickstart**: specs/001-mini-storefront/quickstart.md
-<!-- SPECKIT END -->

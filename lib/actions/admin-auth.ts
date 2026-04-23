@@ -5,6 +5,7 @@ import { cookies } from 'next/headers'
 import bcrypt from 'bcryptjs'
 import { z } from 'zod'
 import { signAdminSession } from '@/lib/utils/admin-session'
+import { createAdminClient } from '@/lib/supabase/server'
 
 const loginSchema = z.object({
   username: z.string().min(1, 'Vui lòng nhập tên đăng nhập'),
@@ -32,21 +33,22 @@ export async function adminLogin(formData: FormData): Promise<AdminLoginResult> 
   }
 
   const { username, password } = parsed.data
-  const expectedUsername = process.env.ADMIN_USERNAME
-  const passwordHash = process.env.ADMIN_PASSWORD_HASH
 
-  if (!expectedUsername || !passwordHash) {
+  // Lookup admin from DB (service role — bypasses RLS)
+  const supabase = createAdminClient()
+  const { data: admin } = await supabase
+    .from('admins')
+    .select('username, password_hash')
+    .eq('username', username)
+    .single()
+
+  if (!admin) {
+    // Perform dummy bcrypt compare to prevent timing attacks on username enumeration
+    await bcrypt.compare(password, '$2b$12$dummyhashfortimingprotectionxx')
     return { success: false, error: 'INVALID_CREDENTIALS' }
   }
 
-  // Username check (timing-safe via bcrypt comparison of password regardless)
-  if (username !== expectedUsername) {
-    // Perform a dummy bcrypt compare to prevent timing attacks on username enumeration
-    await bcrypt.compare(password, '$2b$12$dummy.hash.for.timing.protection.xxxxx')
-    return { success: false, error: 'INVALID_CREDENTIALS' }
-  }
-
-  const valid = await bcrypt.compare(password, passwordHash)
+  const valid = await bcrypt.compare(password, admin.password_hash)
   if (!valid) {
     return { success: false, error: 'INVALID_CREDENTIALS' }
   }

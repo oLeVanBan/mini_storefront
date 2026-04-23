@@ -1,6 +1,6 @@
 import Link from 'next/link'
 import { createAdminClient } from '@/lib/supabase/server'
-import { deleteCategory } from '@/lib/actions/admin'
+import DeleteCategoryButton from './DeleteCategoryButton'
 
 export const dynamic = 'force-dynamic'
 
@@ -64,29 +64,11 @@ export default async function AdminCategoriesPage() {
                     >
                       Đổi tên
                     </Link>
-                    <form
-                      action={async () => {
-                        'use server'
-                        await deleteCategory(cat.id)
-                      }}
-                    >
-                      <button
-                        type="submit"
-                        disabled={cat.product_count > 0}
-                        title={
-                          cat.product_count > 0
-                            ? `Không thể xóa — có ${cat.product_count} sản phẩm`
-                            : 'Xóa danh mục'
-                        }
-                        className="text-xs font-medium text-red-600 hover:text-red-800
-                          disabled:text-gray-300 disabled:cursor-not-allowed transition-colors"
-                        onClick={(e) => {
-                          if (!confirm(`Xóa danh mục "${cat.name}"?`)) e.preventDefault()
-                        }}
-                      >
-                        Xóa
-                      </button>
-                    </form>
+                    <DeleteCategoryButton
+                      categoryId={cat.id}
+                      categoryName={cat.name}
+                      productCount={cat.product_count}
+                    />
                   </div>
                 </td>
               </tr>

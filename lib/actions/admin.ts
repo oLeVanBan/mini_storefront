@@ -20,7 +20,7 @@ const SLUG_RE = /^[a-z0-9]+(?:-[a-z0-9]+)*$/
 
 export async function updateProduct(
   productId: string,
-  data: { price?: number; stockQuantity?: number; isPublished?: boolean }
+  data: { name?: string; price?: number; stockQuantity?: number; isPublished?: boolean; categoryId?: string }
 ): Promise<{ success: boolean; error?: string }> {
   if (!(await checkAdminAccess())) {
     return { success: false, error: 'UNAUTHORIZED' }
@@ -34,9 +34,15 @@ export async function updateProduct(
   }
 
   const updatePayload: Record<string, unknown> = {}
+  if (data.name !== undefined) {
+    const trimmed = data.name.trim()
+    if (!trimmed) return { success: false, error: 'VALIDATION_ERROR' }
+    updatePayload.name = trimmed
+  }
   if (data.price !== undefined) updatePayload.price = data.price
   if (data.stockQuantity !== undefined) updatePayload.stock_quantity = data.stockQuantity
   if (data.isPublished !== undefined) updatePayload.is_published = data.isPublished
+  if (data.categoryId !== undefined) updatePayload.category_id = data.categoryId
 
   const supabase = createAdminClient()
   const { error } = await supabase
@@ -167,4 +173,65 @@ export async function deleteCategory(
   revalidatePath('/admin/categories')
   revalidatePath('/')
   return { success: true }
+}
+
+// ── uploadProductImage (T085) ─────────────────────────────────────────────────
+
+const ALLOWED_MIME = ['image/jpeg', 'image/png', 'image/webp'] as const
+const MAX_BYTES = 5 * 1024 * 1024 // 5 MB
+
+export async function uploadProductImage(
+  productId: string,
+  formData: FormData
+): Promise<{ success: boolean; imageUrl?: string; error?: string }> {
+  if (!(await checkAdminAccess())) {
+    return { success: false, error: 'UNAUTHORIZED' }
+  }
+
+  const file = formData.get('file') as File | null
+  if (!file || file.size === 0) {
+    return { success: false, error: 'NO_FILE' }
+  }
+  if (!ALLOWED_MIME.includes(file.type as (typeof ALLOWED_MIME)[number])) {
+    return { success: false, error: 'INVALID_TYPE' }
+  }
+  if (file.size > MAX_BYTES) {
+    return { success: false, error: 'FILE_TOO_LARGE' }
+  }
+
+  const ext = file.type.split('/')[1].replace('jpeg', 'jpg')
+  const path = `${productId}.${ext}`
+  const arrayBuffer = await file.arrayBuffer()
+  const buffer = Buffer.from(arrayBuffer)
+
+  const supabase = createAdminClient()
+
+  const { error: uploadError } = await supabase.storage
+    .from('product-images')
+    .upload(path, buffer, {
+      contentType: file.type,
+      upsert: true,
+    })
+
+  if (uploadError) {
+    return { success: false, error: 'UPLOAD_FAILED' }
+  }
+
+  const { data: { publicUrl } } = supabase.storage
+    .from('product-images')
+    .getPublicUrl(path)
+
+  const { error: updateError } = await supabase
+    .from('products')
+    .update({ image_url: publicUrl })
+    .eq('id', productId)
+
+  if (updateError) {
+    return { success: false, error: 'SERVER_ERROR' }
+  }
+
+  revalidatePath('/')
+  revalidatePath(`/products/${productId}`)
+  revalidatePath('/admin/products')
+  return { success: true, imageUrl: publicUrl }
 }

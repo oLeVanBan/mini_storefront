@@ -3,7 +3,7 @@ import ProductGrid from '@/components/ProductGrid'
 import Link from 'next/link'
 import type { Category, Product } from '@/lib/types'
 
-export const revalidate = 60 // ISR: revalidate every 60s
+export const dynamic = 'force-dynamic'
 
 export default async function HomePage() {
   const supabase = await createClient()

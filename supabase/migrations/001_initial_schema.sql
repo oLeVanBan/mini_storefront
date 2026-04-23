@@ -118,6 +118,19 @@ BEGIN
     CREATE POLICY "products_public_read"
       ON products FOR SELECT TO anon USING (is_published = true);
   END IF;
+  -- Authenticated users also need to read public data
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_policies WHERE tablename = 'categories' AND policyname = 'categories_auth_read'
+  ) THEN
+    CREATE POLICY "categories_auth_read"
+      ON categories FOR SELECT TO authenticated USING (true);
+  END IF;
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_policies WHERE tablename = 'products' AND policyname = 'products_auth_read'
+  ) THEN
+    CREATE POLICY "products_auth_read"
+      ON products FOR SELECT TO authenticated USING (is_published = true);
+  END IF;
 END $$;
 
 -- orders, order_items, payment_details: no anon/authenticated policies
