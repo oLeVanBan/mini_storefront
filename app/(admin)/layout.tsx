@@ -21,6 +21,9 @@ export default function AdminLayout({
             <Link href="/admin/categories" className="hover:text-indigo-200 transition-colors">
               Danh mục
             </Link>
+            <Link href="/admin/orders" className="hover:text-indigo-200 transition-colors">
+              Đơn hàng
+            </Link>
             <Link href="/admin/users" className="hover:text-indigo-200 transition-colors">
               Người dùng
             </Link>

@@ -1,6 +1,11 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
+  experimental: {
+    serverActions: {
+      bodySizeLimit: "6mb", // supports image uploads up to 5MB + multipart overhead
+    },
+  },
   images: {
     // Next.js 16: local network images (localhost/127.0.0.1) require this flag.
     // Only enable in development — production uses https://*.supabase.co.

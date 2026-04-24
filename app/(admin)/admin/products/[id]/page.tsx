@@ -4,16 +4,19 @@ import { createAdminClient } from '@/lib/supabase/server'
 import { formatVND } from '@/lib/utils/format'
 import { updateProduct } from '@/lib/actions/admin'
 import ImageUploadButton from '@/components/ImageUploadButton'
+import SaveSuccessBanner from '@/components/SaveSuccessBanner'
 import type { Product, Category } from '@/lib/types'
 
 export const dynamic = 'force-dynamic'
 
 interface Props {
   params: Promise<{ id: string }>
+  searchParams: Promise<{ saved?: string }>
 }
 
-export default async function AdminProductEditPage({ params }: Props) {
+export default async function AdminProductEditPage({ params, searchParams }: Props) {
   const { id } = await params
+  const { saved } = await searchParams
   const supabase = createAdminClient()
 
   const [{ data: product }, { data: categories }] = await Promise.all([
@@ -43,12 +46,13 @@ export default async function AdminProductEditPage({ params }: Props) {
 
     const result = await updateProduct(id, { name, price, stockQuantity, isPublished, categoryId })
     if (result.success) {
-      redirect('/admin/products')
+      redirect(`/admin/products/${id}?saved=1`)
     }
   }
 
   return (
     <div className="max-w-lg space-y-6">
+      {saved === '1' && <SaveSuccessBanner message="Đã lưu thay đổi thành công!" />}
       <div>
         <Link href="/admin/products" className="text-sm text-indigo-600 hover:underline">
           ← Danh sách sản phẩm
