@@ -14,6 +14,7 @@ pnpm install
 
 ### 2. Cấu hình biến môi trường
 
+#### Setup .env.local
 Sao chép file mẫu:
 
 ```bash
@@ -22,10 +23,28 @@ cp .env.local.example .env.local
 
 | Biến | Lấy ở đâu |
 |------|----------|
-| `NEXT_PUBLIC_SUPABASE_URL` | Supabase Dashboard → Settings → API |
-| `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Supabase Dashboard → Settings → API |
-| `SUPABASE_SERVICE_ROLE_KEY` | Supabase Dashboard → Settings → API |
+| `NEXT_PUBLIC_SUPABASE_URL` | Supabase Dashboard → Settings → General -> Project ID: https://${Project ID}.supabase.co|
+| `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Supabase Dashboard → Settings → API Keys -> Legacy anon, service_role API keys|
+| `SUPABASE_SERVICE_ROLE_KEY` | Supabase Dashboard → Settings → API Keys -> Legacy anon, service_role API keys|
 | `ADMIN_SESSION_SECRET` | `openssl rand -hex 32` |
+| `CART_COOKIE_SECRET` | `openssl rand -base64 32` |
+
+#### Setup MCP server
+Ví dụ khi dùng vscode
+```
+File path: .vscode/mcp.json
+{
+  "servers": {
+    "context7": {
+      "type": "http",
+      "url": "https://mcp.context7.com/mcp",
+      "headers": {
+        "CONTEXT7_API_KEY": "ctx7sk-YOUR-CONTEXT7_API_KEY"
+      }
+    }
+  }
+}
+```
 
 
 ### 3. Chạy migrations Supabase
@@ -171,7 +190,8 @@ __tests__/
 | `NEXT_PUBLIC_SUPABASE_URL` | `https://<project-ref>.supabase.co` |
 | `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Anon key từ Supabase |
 | `SUPABASE_SERVICE_ROLE_KEY` | Service role key từ Supabase |
-| `ADMIN_SESSION_SECRET` | Chuỗi hex ngẫu nhiên ≥32 ký tự |
+| `ADMIN_SESSION_SECRET` | Chuỗi hex ngẫu nhiên ≥ 32 ký tự |
+| `CART_COOKIE_SECRET` | Chuỗi base64 ngẫu nhiên ≥ 32 ký tự |
 
 
 3. Nhấn **Deploy**
@@ -181,17 +201,3 @@ __tests__/
 - Trang chủ hiển thị sản phẩm mẫu (từ seed data trong migration 001)
 - Đăng nhập admin tại `/admin/login`
 - Upload ảnh sản phẩm tại `/admin/products/{id}` (cần migration 003 đã chạy)
-
-### Câu hỏi thường gặp khi deploy
-
-**Q: Trang hiển thị trống, không có sản phẩm?**
-→ Chưa chạy migration 001. Vào Supabase SQL Editor → chạy `001_initial_schema.sql`.
-
-**Q: Upload ảnh bị lỗi?**
-→ Kiểm tra: (1) đã chạy migration 003 tạo bucket, (2) `SUPABASE_SERVICE_ROLE_KEY` đúng trên Vercel.
-
-**Q: Admin login không được?**
-→ Kiểm tra: (1) migration 004 đã chạy (bảng `admins` có dữ liệu), (2) nhập đúng username/password, (3) `ADMIN_SESSION_SECRET` đã được set trên Vercel.
-
-**Q: Sau khi đặt hàng, trang order không hiện?**
-→ Kiểm tra migration 002 đã chạy chưa.

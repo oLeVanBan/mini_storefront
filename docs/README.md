@@ -1,7 +1,6 @@
 # Hướng Dẫn Sử Dụng – Mini Store
 
 > Tài liệu mô tả đầy đủ các trang, luồng thao tác, đường dẫn và chức năng của hệ thống Mini Store chạy trên web.
-> Ảnh chụp màn hình (screenshot) sẽ được bổ sung sau.
 
 ---
 
@@ -28,9 +27,7 @@
    - 3.6 [Quản lý Đơn hàng `/admin/orders`](#36-quản-lý-đơn-hàng-adminorders)
    - 3.7 [Chi tiết Đơn hàng Admin `/admin/orders/{id}`](#37-chi-tiết-đơn-hàng-admin-adminordersid)
    - 3.8 [Quản lý Người dùng `/admin/users`](#38-quản-lý-người-dùng-adminusers)
-4. [Luồng nghiệp vụ chính](#4-luồng-nghiệp-vụ-chính)
-5. [Trạng thái đơn hàng](#5-trạng-thái-đơn-hàng)
-6. [FAQ](#6-faq)
+
 
 ---
 
@@ -62,7 +59,10 @@ Cố định ở đầu trang, xuất hiện trên tất cả trang shop.
 | **Đăng ký** | Chuyển đến `/register` |
 | **Giỏ hàng** (icon túi + số) | Xem giỏ tại `/cart` |
 
-> Khi đã đăng nhập: thay Đăng nhập/Đăng ký bằng **Đơn hàng** (lịch sử cá nhân) và **Đăng xuất**.
+> Khi đã đăng nhập: thay Đăng nhập/Đăng ký bằng **Đơn hàng** và **Đăng xuất**.
+
+![Navbar1](/docs/images/Navbar1.png)
+![Navbar2](/docs/images/Navbar2.png)
 
 ---
 
@@ -75,7 +75,7 @@ Hiển thị toàn bộ sản phẩm đang bán, nhóm theo danh mục.
 - Nhấn thẻ sản phẩm → vào `/products/{id}`
 - Nhấn **"Thêm vào giỏ"** trên thẻ → thêm 1 đơn vị vào giỏ
 
-> *[Screenshot: Trang chủ – lưới sản phẩm nhóm theo danh mục]*
+![homepage](/docs/images/homepage.png)
 
 ---
 
@@ -85,7 +85,7 @@ Hiển thị toàn bộ sản phẩm đang bán, nhóm theo danh mục.
 
 Hiển thị sản phẩm thuộc một danh mục. Tương tác giống trang chủ.
 
-> *[Screenshot: Trang danh mục]*
+![homepage](/docs/images/ao.png)
 
 ---
 
@@ -97,7 +97,7 @@ Hiển thị sản phẩm thuộc một danh mục. Tương tác giống trang c
 - Nhấn **"Thêm vào giỏ hàng"** → thêm vào giỏ, số đếm trên navbar tăng
 - Nếu hết hàng → nút bị vô hiệu hóa, hiển thị "Hết hàng"
 
-> *[Screenshot: Trang chi tiết sản phẩm]*
+![homepage](/docs/images/p-detail.png)
 
 ---
 
@@ -117,7 +117,7 @@ Hiển thị sản phẩm thuộc một danh mục. Tương tác giống trang c
 
 > Khi giỏ trống → icon giỏ rỗng + nút về trang chủ.
 
-> *[Screenshot: Giỏ hàng có sản phẩm]*
+![homepage](/docs/images/oder.png)
 
 ---
 
@@ -154,7 +154,7 @@ Hiển thị sản phẩm thuộc một danh mục. Tương tác giống trang c
 
 **Lỗi thường gặp:** bỏ trống trường bắt buộc · số thẻ sai định dạng · sản phẩm hết hàng
 
-> *[Screenshot: Form checkout COD / Form checkout thẻ]*
+![homepage](/docs/images/checkout.png)
 
 ---
 
@@ -168,7 +168,7 @@ Dành cho khách chưa đăng nhập.
 3. Nhấn **"Tra cứu"**
 4. Hiển thị kết quả ngay trên trang
 
-> *[Screenshot: Form tra cứu đơn hàng]*
+![homepage](/docs/images/orders.png)
 
 ---
 
@@ -179,6 +179,7 @@ Hiển thị sau khi đặt hàng thành công, hoặc khi tra cứu.
 **Nội dung:** Mã đơn · Trạng thái · Thông tin người đặt · Danh sách sản phẩm · Phương thức thanh toán · Tổng tiền
 
 > *[Screenshot: Trang xác nhận đơn hàng]*
+![homepage](/docs/images/order-detail.png)
 
 ---
 
@@ -196,7 +197,8 @@ Hiển thị sau khi đặt hàng thành công, hoặc khi tra cứu.
 3. Kiểm tra hòm thư → nhấn link xác nhận
 4. Đăng nhập tại `/login`
 
-> *[Screenshot: Form đăng ký]*
+![homepage](/docs/images/login.png)
+![homepage](/docs/images/register.png)
 
 ---
 
@@ -209,7 +211,7 @@ Hiển thị sau khi đặt hàng thành công, hoặc khi tra cứu.
 
 Nhấn **"Đăng nhập"** → về trang chủ.
 
-> *[Screenshot: Form đăng nhập]*
+![homepage](/docs/images/login.png)
 
 ---
 
@@ -219,7 +221,7 @@ Nhấn **"Đăng nhập"** → về trang chủ.
 
 Toàn bộ đơn hàng của tài khoản: mã đơn · ngày · tổng tiền · trạng thái · link xem chi tiết.
 
-> *[Screenshot: Lịch sử đơn hàng]*
+![homepage](/docs/images/orders2.png)
 
 ---
 
@@ -253,7 +255,7 @@ Nhấn **"Đăng nhập"** → vào `/admin/products`.
 
 Credentials được xác thực từ bảng `admins` trên DB. Session lưu bằng HMAC-signed cookie, hiệu lực 8 giờ.
 
-> *[Screenshot: Form đăng nhập admin]*
+![homepage](/docs/images/a-login.png)
 
 ---
 
@@ -272,7 +274,7 @@ Danh sách toàn bộ sản phẩm (kể cả đang ẩn).
 
 **Thao tác nhanh:** Nhấn badge trạng thái → đổi ngay publish/unpublish không cần vào form sửa.
 
-> *[Screenshot: Bảng danh sách sản phẩm]*
+![homepage](/docs/images/a-orders.png)
 
 ---
 
@@ -291,7 +293,7 @@ Danh sách toàn bộ sản phẩm (kể cả đang ẩn).
 1. Sửa các trường → nhấn **"Lưu thay đổi"** → banner xanh xác nhận
 2. Upload ảnh: nhấn nút upload → chọn file → tải lên ngay lập tức (độc lập với form lưu)
 
-> *[Screenshot: Form sửa sản phẩm – khu vực upload ảnh]*
+![homepage](/docs/images/a-product.png)
 
 ---
 
@@ -307,7 +309,7 @@ Danh sách toàn bộ sản phẩm (kể cả đang ẩn).
 - Nhấn **"+ Tạo danh mục mới"** → `/admin/categories/new`
 - Không xoá được danh mục đang có sản phẩm
 
-> *[Screenshot: Danh sách danh mục]*
+![homepage](/docs/images/acategories.png)
 
 ---
 
@@ -319,6 +321,8 @@ Danh sách toàn bộ sản phẩm (kể cả đang ẩn).
 | **Slug** | Chữ thường, dấu gạch ngang (ví dụ: `phu-kien`) |
 
 Nhấn **"Tạo danh mục"** → về danh sách danh mục.
+
+![homepage](/docs/images/acategoriesnew.png)
 
 ---
 
@@ -335,7 +339,7 @@ Nhấn **"Tạo danh mục"** → về danh sách danh mục.
 
 Nhấn **"Xem"** → `/admin/orders/{id}`
 
-> *[Screenshot: Bảng danh sách đơn hàng]*
+![homepage](/docs/images/aorders.png)
 
 ---
 
@@ -352,83 +356,14 @@ Xem đầy đủ thông tin + quản lý trạng thái.
 | Đã xác nhận | Không thể thay đổi |
 | Đã huỷ | Không thể thay đổi |
 
-> *[Screenshot: Chi tiết đơn hàng admin]*
+![homepage](/docs/images/aorder.png)
 
 ---
 
 ### 3.8 Quản lý Người dùng `/admin/users`
 
 Danh sách tài khoản đã đăng ký. Nhấn vào một người dùng → `/admin/users/{id}` để xem chi tiết và khoá/mở khoá tài khoản.
+![homepage](/docs/images/au.png)
+![homepage](/docs/images/au2.png)
 
 ---
-
-## 4. Luồng nghiệp vụ chính
-
-### Mua hàng (không cần đăng nhập)
-
-```
-Trang chủ (/) → Xem sản phẩm → /products/{id}
-  → "Thêm vào giỏ" → Giỏ hàng (/cart)
-  → "Tiến hành thanh toán" → Checkout (/checkout)
-  → Điền thông tin + Chọn COD/Thẻ → "Đặt hàng"
-  → Xác nhận đơn (/orders/{reference})
-```
-
-### Tra cứu đơn (khách)
-
-```
-Navbar → "Đơn hàng" (/orders)
-  → Nhập mã đơn + email → "Tra cứu"
-  → Xem chi tiết đơn hàng
-```
-
-### Đăng ký và xem lịch sử
-
-```
-/register → Xác nhận email → /login → /profile/orders
-```
-
-### Admin quản lý sản phẩm
-
-```
-/admin/login → /admin/products → "Sửa" → /admin/products/{id}
-  → Sửa tên/giá/tồn kho/danh mục/trạng thái → "Lưu thay đổi"
-  → Upload ảnh mới (nút riêng)
-```
-
-### Admin xử lý đơn hàng
-
-```
-/admin/orders → "Xem" → /admin/orders/{id}
-  → "Xác nhận đơn" (pending → confirmed)
-  → "Huỷ đơn"       (pending → cancelled)
-```
-
----
-
-## 5. Trạng thái đơn hàng
-
-| Trạng thái | Hiển thị | Màu | Mô tả |
-|------------|----------|-----|-------|
-| `pending` | Chờ xác nhận | Vàng | Đơn mới tạo, chờ admin duyệt |
-| `confirmed` | Đã xác nhận | Xanh lá | Admin đã duyệt |
-| `cancelled` | Đã huỷ | Đỏ | Đơn bị huỷ |
-
----
-
-## 6. FAQ
-
-**Q: Đặt hàng xong quên lưu mã đơn, làm sao tra cứu?**
-→ Vào `/orders`, nhập email đã dùng khi đặt. Hoặc nếu có tài khoản → đăng nhập → `/profile/orders`.
-
-**Q: Có thể tự huỷ đơn không?**
-→ Hiện tại chỉ Admin mới huỷ được. Liên hệ shop để được hỗ trợ.
-
-**Q: Giỏ hàng có lưu khi tắt trình duyệt không?**
-→ Có. Giỏ hàng lưu trong cookie phía máy chủ, tồn tại đến khi đặt hàng thành công hoặc xoá thủ công.
-
-**Q: Cần đăng nhập để đặt hàng không?**
-→ Không. Đặt hàng hoàn toàn không cần tài khoản. Tài khoản chỉ dùng để xem lịch sử đơn hàng cá nhân.
-
-**Q: Admin đăng nhập thế nào?**
-→ Truy cập `/admin/login`, dùng username/password được tạo trong bảng `admins` (chạy migration 004). Đây là hệ thống xác thực riêng, không liên quan đến tài khoản shop.
