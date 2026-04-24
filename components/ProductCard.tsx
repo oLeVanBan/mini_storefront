@@ -74,7 +74,7 @@ export default function ProductCard({ product }: ProductCardProps) {
             disabled={isOutOfStock}
             aria-label={`Thêm ${product.name} vào giỏ hàng`}
             className="w-full mt-1 py-1.5 px-3 text-xs font-medium rounded-md transition-colors
-              disabled:opacity-50 disabled:cursor-not-allowed
+              disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer
               bg-indigo-600 text-white hover:bg-indigo-700 disabled:bg-gray-300 disabled:text-gray-500"
           >
             {isOutOfStock ? 'Hết hàng' : 'Thêm vào giỏ'}
